@@ -1,0 +1,23 @@
+elitali94, yechezker
+===============================================================================
+Elital Markowitz, ID 205454226, elital.markowitz@mail.huji.ac.il
+Yechezkel Raff, ID 203875760, hezi.raff@mail.huji.ac.il
+===============================================================================
+
+                           Project 6 - Weeks 6
+                           ----------------------- 
+  
+
+Submitted Files
+---------------
+README - This file.
+
+Assembler.py -  this program gets asm files (files that written in assembly language),and translate them to binary code
+    (hack language).for every input file_name.asm, the program output file_name.hack .
+    it translate by parsering the file into list, change the line as need (use whit dictionaries) and write it to
+     a file with same name as a original, but with ".hack" suffix.
+
+Makefile - make permission to Assembler.py
+Assembler - compile the Assembler.py file
+Remarks
+-------
