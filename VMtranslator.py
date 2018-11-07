@@ -10,7 +10,6 @@ import os
 ############################################################
 # Constants
 ############################################################
-elital= "elital"
 START_BRACKET = '('
 END_BRACKET = ')'
 A_INSTRUCTION = "@"
@@ -32,6 +31,14 @@ LT="lt"
 AND="and"
 OR="or"
 NOT="not"
+LOCAL = "loacl"
+ARGUMENT ="argument"
+THIS= "this"
+THAT= "that"
+CONSTANT ="constant"
+STATIC ="static"
+POINTER ="pointer"
+TEMP= "temp"
 COUNTER = 0
 
 
@@ -40,6 +47,8 @@ COUNTER = 0
 ############################################################
 list_of_vm_lines = []
 list_of_asm_lines = []
+list_of_memory_segments=[LOCAL,ARGUMENT,THAT,THIS]
+
 
 
 ############################################################
@@ -94,8 +103,6 @@ def from_asm_to_list(input_file):
                 if not (split_line == ""):
                     turn_to_lise= split_line.split(SPACE)
                     list_of_vm_lines.append(turn_to_lise)
-
-
 def line_without_aritmetic(line):
     if line == ADD:
         list_of_asm_lines.extend(["//"+line,"@SP","A = M - 1","D = M",
@@ -109,45 +116,105 @@ def line_without_aritmetic(line):
             ["//" + line, "@SP", "A = M - 1", "M = -M"])
     elif line ==EQ:
         list_of_asm_lines.extend(["//" + line, "@SP", "A=M-1", "D=M", "A=A-1",
-                                  "D=M-D","@i","M=D","@sp","M=M-1","A=M","A=A-1",
-            "M=0","D=A","@j","M=D","@i","D=M","@CONTINU","D;JNE","@j",
+                                  "D=M-D","@13","M=D","@sp","M=M-1","A=M","A=A-1",
+            "M=0","D=A","@14","M=D","@13","D=M","@CONTINU","D;JNE","@14",
                                   "A=M","M=1","(CONTINU)"])
     elif line ==GT:
         list_of_asm_lines.extend(["//" + line, "@SP", "A=M-1", "D=M", "A=A-1",
-                            "D=M-D","@i","M=D","@sp","M=M-1","A=M","A=A-1",
-                                  "M=0", "D=A", "@j", "M=D", "@i", "D=M",
-                                  "@CONTINU", "D;JLE", "@j",
+                            "D=M-D","@13","M=D","@sp","M=M-1","A=M","A=A-1",
+                                  "M=0", "D=A", "@14", "M=D", "@13", "D=M",
+                                  "@CONTINU", "D;JLE", "@14",
                                   "A=M", "M=1", "(CONTINU)"])
     elif line ==LT:
         list_of_asm_lines.extend(["//" + line, "@SP", "A=M-1", "D=M", "A=A-1",
-                                "D=M-D","@i","M=D","@sp","M=M-1","A=M","A=A-1",
-                                  "M=0", "D=A", "@j", "M=D", "@i", "D=M",
-                                  "@CONTINU", "D;JGE", "@j",
+                                "D=M-D","@13","M=D","@sp","M=M-1","A=M","A=A-1",
+                                  "M=0", "D=A", "@14", "M=D", "@13", "D=M",
+                                  "@CONTINU", "D;JGE", "@14",
                                   "A=M", "M=1", "(CONTINU)"])
     elif line ==AND:
         list_of_asm_lines.extend(["//" + line, "@SP", "A=M-1", "D=M", "A=A-1",
-                    "D=M+D","D=D-1","@i","M=D","@sp","M=M-1","A=M","A=A-1",
-                                  "M=0", "D=A", "@j", "M=D", "@i", "D=M",
-                                  "@CONTINU", "D;JLE", "@j",
+                    "D=M+D","D=D-1","@13","M=D","@sp","M=M-1","A=M","A=A-1",
+                                  "M=0", "D=A", "@14", "M=D", "@13", "D=M",
+                                  "@CONTINU", "D;JLE", "@14",
                                   "A=M", "M=1", "(CONTINU)"])
     elif line ==OR:
         list_of_asm_lines.extend(["//" + line, "@SP", "A=M-1", "D=M", "A=A-1",
-                    "D=M+D","@i","M=D","@sp","M=M-1","A=M","A=A-1",
-                                  "M=0", "D=A", "@j", "M=D", "@i", "D=M",
-                                  "@CONTINU", "D;JLE", "@j",
+                    "D=M+D","@13","M=D","@sp","M=M-1","A=M","A=A-1",
+                                  "M=0", "D=A", "@14", "M=D", "@13", "D=M",
+                                  "@CONTINU", "D;JLE", "@14",
                                   "A=M", "M=1", "(CONTINU)"])
     elif line ==NOT:
         list_of_asm_lines.extend(["//" + line, "@SP", "A=M-1", "D=M",
-           "@i", "M=D", "@sp", "A=M", "A=A-1",
-          "M=0", "D=A", "@j", "M=D", "@i", "D=M",
-          "@CONTINU", "D;JGT", "@j",
+           "@13", "M=D", "@SP", "A=M", "A=A-1",
+          "M=0", "D=A", "@14", "M=D", "@13", "D=M",
+          "@CONTINU", "D;JGT", "@14",
           "A=M", "M=1", "(CONTINU)"])
 
 
+def line_without_push(line):
+    segment = line[1]
+    i = line[2]
+    if segment in list_of_memory_segments:
+        push_for_memory_segments(PUSH,segment,i)
+    if segment == POINTER:
+        push_for_pointer(PUSH, segment, i)
+    if segment == CONSTANT:
+        list_of_asm_lines.extend(["//" + PUSH + str(segment) + str(i),
+                                  "@" + str(i), "D=A", "@SP", "A=M", "M=D",
+                                  "@SP", "M=M+1"])
 
-def line_without_push(line):pass
+def push_for_pointer(PUSH, segment, i):
+    address = ""
+    if i == 0:
+        address = "THIS"
+    else:
+        address = "THAT"
 
-def line_without_pop(line):pass
+def pop_for_pointer(pop, segment, i):
+    address = ""
+    if i == 0:
+        address = "THIS"
+    else:
+        address = "THAT"
+
+def push_for_memory_segments(push, segment,i):
+    address = ""
+    if segment == LOCAL:
+        address ="LCL"
+    elif segment == ARGUMENT:
+        address= "ARG"
+    elif segment == THIS:
+        address= "THIS"
+    else:
+        address ="THAT"
+    list_of_asm_lines.extend(["//"+str(push)+str(segment)+str(i),
+                              "@"+str(i),"D=A","@"+str(address),"D=D+M","A=D",
+                              "D=M","@SP","A=M","M=D","@SP","M=M+1"])
+
+def line_without_pop(line):
+    pop = line[0]
+    segment = line[1]
+    i = line[2]
+    if segment in list_of_memory_segments:
+        pop_for_memory_segments(pop,segment, i)
+    if segment == POINTER:
+        pop_for_pointer(POP, segment, i)
+
+def pop_for_memory_segments(pop,segment,i):
+    address = ""
+    if segment == LOCAL:
+        address ="LCL"
+    elif segment == ARGUMENT:
+        address= "ARG"
+    elif segment == THIS:
+        address= "THIS"
+    else:
+        address ="THAT"
+    list_of_asm_lines.extend(["//"+str(pop)+str(segment)+str(i),"@SP", "A=M-1",
+                              "D=M","@13","M=D","@"+str(i),"D=A",
+                              "@"+str(address),"D=D+M","A=D","@14","M=D","@13",
+                             "D=M","@14","A=M","M=D","@SP","M=M-1"])
+
 
 def vm_to_asm():
     for line in list_of_vm_lines:
