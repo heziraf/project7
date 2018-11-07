@@ -47,6 +47,8 @@ COUNTER = 0
 ############################################################
 list_of_vm_lines = []
 list_of_asm_lines = []
+list_of_simple_actions= [ADD,SUB]
+list_of_comparative_actions = [EQ,LT,GT]
 list_of_memory_segments=[LOCAL,ARGUMENT,THAT,THIS]
 
 
@@ -65,9 +67,6 @@ def list_without_comments():
         if len( list_of_vm_lines[i])>3:
             list_of_vm_lines[i]=list_of_vm_lines[i][:3]
 
-
-
-
 def writing_to_a_file(input_file):
     '''
     The function runs on the array list_of_asm_lines and write to file all
@@ -82,7 +81,6 @@ def writing_to_a_file(input_file):
             file_lines.write(list_of_asm_lines[i] + end)
     if len(list_of_asm_lines) != 0:
         del list_of_asm_lines[:]
-
 
 def from_asm_to_list(input_file):
     '''
@@ -103,81 +101,83 @@ def from_asm_to_list(input_file):
                 if not (split_line == ""):
                     turn_to_lise= split_line.split(SPACE)
                     list_of_vm_lines.append(turn_to_lise)
+
 def line_without_aritmetic(line):
-    if line == ADD:
-        list_of_asm_lines.extend(["//"+line,"@SP","A = M - 1","D = M",
-                                  "A = A - 1","D = D + M","M = D","@SP","M=M-1"])
-    elif line == SUB:
-        list_of_asm_lines.extend(
-            ["//" + line, "@SP", "A = M - 1", "D = M", "A = A - 1",
-             "D=M-D", "M = D","@SP","M=M-1"])
+
+    if line in list_of_simple_actions:
+        simple_actions(line)
+    elif line in list_of_comparative_actions:
+        comparative_actions(line)
     elif line ==NEG:
         list_of_asm_lines.extend(
-            ["//" + line, "@SP", "A = M - 1", "M = -M"])
-    elif line ==EQ:
-        list_of_asm_lines.extend(["//" + line, "@SP", "A=M-1", "D=M", "A=A-1",
-                                  "D=M-D","@13","M=D","@sp","M=M-1","A=M","A=A-1",
-            "M=0","D=A","@14","M=D","@13","D=M","@CONTINU","D;JNE","@14",
-                                  "A=M","M=1","(CONTINU)"])
-    elif line ==GT:
-        list_of_asm_lines.extend(["//" + line, "@SP", "A=M-1", "D=M", "A=A-1",
-                            "D=M-D","@13","M=D","@sp","M=M-1","A=M","A=A-1",
-                                  "M=0", "D=A", "@14", "M=D", "@13", "D=M",
-                                  "@CONTINU", "D;JLE", "@14",
-                                  "A=M", "M=1", "(CONTINU)"])
-    elif line ==LT:
-        list_of_asm_lines.extend(["//" + line, "@SP", "A=M-1", "D=M", "A=A-1",
-                                "D=M-D","@13","M=D","@sp","M=M-1","A=M","A=A-1",
-                                  "M=0", "D=A", "@14", "M=D", "@13", "D=M",
-                                  "@CONTINU", "D;JGE", "@14",
-                                  "A=M", "M=1", "(CONTINU)"])
+            [ "@SP", "A = M - 1", "M = -M"])
     elif line ==AND:
-        list_of_asm_lines.extend(["//" + line, "@SP", "A=M-1", "D=M", "A=A-1",
+        list_of_asm_lines.extend(["@SP", "A=M-1", "D=M", "A=A-1",
                     "D=M+D","D=D-1","@13","M=D","@sp","M=M-1","A=M","A=A-1",
                                   "M=0", "D=A", "@14", "M=D", "@13", "D=M",
                                   "@CONTINU", "D;JLE", "@14",
                                   "A=M", "M=1", "(CONTINU)"])
     elif line ==OR:
-        list_of_asm_lines.extend(["//" + line, "@SP", "A=M-1", "D=M", "A=A-1",
+        list_of_asm_lines.extend([ "@SP", "A=M-1", "D=M", "A=A-1",
                     "D=M+D","@13","M=D","@sp","M=M-1","A=M","A=A-1",
                                   "M=0", "D=A", "@14", "M=D", "@13", "D=M",
                                   "@CONTINU", "D;JLE", "@14",
                                   "A=M", "M=1", "(CONTINU)"])
     elif line ==NOT:
-        list_of_asm_lines.extend(["//" + line, "@SP", "A=M-1", "D=M",
+        list_of_asm_lines.extend([ "@SP", "A=M-1", "D=M",
            "@13", "M=D", "@SP", "A=M", "A=A-1",
           "M=0", "D=A", "@14", "M=D", "@13", "D=M",
           "@CONTINU", "D;JGT", "@14",
           "A=M", "M=1", "(CONTINU)"])
 
+def simple_actions(line):
+    if line == ADD:
+        action ="D = D + M"
+    else:
+        action = "D = M-D"
+    list_of_asm_lines.extend(["@SP", "A = M - 1", "D = M",
+                                  "A = A - 1", action, "M = D", "@SP",
+                                  "M=M-1"])
 
-def line_without_push(line):
-    segment = line[1]
-    i = line[2]
+def comparative_actions(line):
+    if line ==EQ:
+        jump = "D;JNE"
+    elif line ==GT:
+        jump = "D;JLE"
+    else:
+        jump =  "D;JGE"
+
+    list_of_asm_lines.extend(["@SP", "A=M-1", "D=M", "A=A-1",
+                              "D=M-D", "@13", "M=D", "@SP", "M=M-1", "A=M",
+                              "A=A-1",
+                              "M=0", "D=A", "@14", "M=D", "@13", "D=M",
+                              "@CONTINU", jump, "@14",
+                              "A=M", "M=1", "(CONTINU)"])
+
+def line_without_push(segment, i):
     if segment in list_of_memory_segments:
-        push_for_memory_segments(PUSH,segment,i)
-    if segment == POINTER:
-        push_for_pointer(PUSH, segment, i)
-    if segment == CONSTANT:
-        list_of_asm_lines.extend(["//" + PUSH + str(segment) + str(i),
-                                  "@" + str(i), "D=A", "@SP", "A=M", "M=D",
+        push_for_memory_segments(segment,i)
+    elif segment == POINTER:
+        push_for_pointer( i)
+    elif segment == CONSTANT:
+        list_of_asm_lines.extend(["@" + str(i), "D=A", "@SP", "A=M", "M=D",
                                   "@SP", "M=M+1"])
+    elif segment == STATIC:
+        push_for_memory_static(i)
+    else:
+        push_for_memory_temp(i)
 
-def push_for_pointer(PUSH, segment, i):
+
+def push_for_pointer( i):
     address = ""
     if i == 0:
         address = "THIS"
     else:
         address = "THAT"
+    list_of_asm_lines.extend(["@" + str(address), "D=M", "@SP", "A=M", "M=D",
+                              "@SP", "M=M+1"])
 
-def pop_for_pointer(pop, segment, i):
-    address = ""
-    if i == 0:
-        address = "THIS"
-    else:
-        address = "THAT"
-
-def push_for_memory_segments(push, segment,i):
+def push_for_memory_segments( segment,i):
     address = ""
     if segment == LOCAL:
         address ="LCL"
@@ -187,20 +187,28 @@ def push_for_memory_segments(push, segment,i):
         address= "THIS"
     else:
         address ="THAT"
-    list_of_asm_lines.extend(["//"+str(push)+str(segment)+str(i),
-                              "@"+str(i),"D=A","@"+str(address),"D=D+M","A=D",
+    list_of_asm_lines.extend(["@"+str(i),"D=A","@"+str(address),"D=D+M","A=D",
                               "D=M","@SP","A=M","M=D","@SP","M=M+1"])
 
-def line_without_pop(line):
-    pop = line[0]
-    segment = line[1]
-    i = line[2]
-    if segment in list_of_memory_segments:
-        pop_for_memory_segments(pop,segment, i)
-    if segment == POINTER:
-        pop_for_pointer(POP, segment, i)
+def push_for_memory_static(i):
+    list_of_asm_lines.extend(["foo."+str(i), "D=A" "@"+str(i),"D=D+A","@SP"
+                                 ,"A=M","M=D","@SP","M=M+1"])
 
-def pop_for_memory_segments(pop,segment,i):
+def push_for_memory_temp(i):
+    list_of_asm_lines.extend([ "@" + str(i), "D=A", "@5", "D=D+A", "A=D",
+    "D=M", "@SP", "A=M", "M=D", "@SP", "M=M+1"])
+
+def line_without_pop(segment,i):
+    if segment in list_of_memory_segments:
+        pop_for_memory_segments(segment, i)
+    elif segment == POINTER:
+        pop_for_pointer( i)
+    elif segment== STATIC:
+        pop_for_memory_static(i)
+    else:
+        pop_for_memory_temp(i)
+
+def pop_for_memory_segments(segment,i):
     address = ""
     if segment == LOCAL:
         address ="LCL"
@@ -210,20 +218,48 @@ def pop_for_memory_segments(pop,segment,i):
         address= "THIS"
     else:
         address ="THAT"
-    list_of_asm_lines.extend(["//"+str(pop)+str(segment)+str(i),"@SP", "A=M-1",
+    list_of_asm_lines.extend(["@SP", "A=M-1",
                               "D=M","@13","M=D","@"+str(i),"D=A",
                               "@"+str(address),"D=D+M","A=D","@14","M=D","@13",
                              "D=M","@14","A=M","M=D","@SP","M=M-1"])
 
+def pop_for_memory_temp(i):
+    list_of_asm_lines.extend(
+        ["@SP", "A=M-1","D=M","@13","M=D","@"+str(i),"D=A",
+                              "@5","D=D+A","A=D","@14","M=D","@13",
+                             "D=M","@14","A=M","M=D","@SP","M=M-1"])
+
+def pop_for_pointer( i):
+    address = ""
+    if i == 0:
+        address = "THIS"
+    else:
+        address = "THAT"
+    list_of_asm_lines.extend([ "@SP", "A=M-1", "M=D","@"+str(address), "M=D",
+                              "@SP", "M=M-1"])
+
+def pop_for_memory_static(i):
+    list_of_asm_lines.extend(["@SP","A=M-1","D=M","@foo."+str(i),"M=D",
+                              "@SP","M=M-1"])
+
+
+
+
 
 def vm_to_asm():
     for line in list_of_vm_lines:
-        if list_of_vm_lines[0]== PUSH:
-            line_without_push(line)
-        elif  list_of_vm_lines[0]== POP:
-            line_without_pop(line)
+        first_arg = line[0]
+        if len(line) == 2:
+            segment = line[1]
+            i = str(line[2])
+            list_of_asm_lines.append("//"+first_arg+ segment+i)
+            if first_arg== PUSH:
+                line_without_push(segment,i)
+            else:
+                line_without_pop(segment,i)
         else:
-            line_without_aritmetic(line)
+            list_of_asm_lines.append("//" + first_arg)
+            line_without_aritmetic(first_arg)
 
 
 
@@ -241,10 +277,7 @@ def from_vm_to_asm(input_file):
         vm_to_asm()
       #  writing_to_a_file(os.path.splitext(input_file)[FIRST_PLACE] + HACK_SUFFIX)
 
-
 def __main__():
-
-
     input_file = sys.argv[SEC_PLACE]
     if os.path.isfile(input_file):
         from_vm_to_asm(input_file)
@@ -254,6 +287,7 @@ def __main__():
             from_vm_to_asm(input_file+file)
     else:
         return
+
 
 
 if __name__ == "__main__":
