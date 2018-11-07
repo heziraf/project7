@@ -242,13 +242,10 @@ def pop_for_memory_static(i):
                               "@SP","M=M-1"])
 
 
-
-
-
 def vm_to_asm():
     for line in list_of_vm_lines:
         first_arg = line[0]
-        if len(line) == 2:
+        if len(line) == 3:
             segment = line[1]
             i = str(line[2])
             list_of_asm_lines.append("//"+first_arg+ segment+i)
@@ -259,9 +256,6 @@ def vm_to_asm():
         else:
             list_of_asm_lines.append("//" + first_arg)
             line_without_aritmetic(first_arg)
-
-
-
 
 def from_vm_to_asm(input_file):
     '''
