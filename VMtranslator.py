@@ -19,7 +19,7 @@ SPACE= " "
 FIRST_PLACE = 0
 SEC_PLACE = 1
 VM_SUFFIX = ".vm"
-HACK_SUFFIX = ".hack"
+ASM_SUFFIX = ".asm"
 PUSH = "push"
 POP = "pop"
 ADD="add"
@@ -167,7 +167,6 @@ def line_without_push(segment, i):
     else:
         push_for_memory_temp(i)
 
-
 def push_for_pointer( i):
     address = ""
     if i == 0:
@@ -273,9 +272,8 @@ def from_vm_to_asm(input_file):
     if input_file.endswith(VM_SUFFIX):
         from_asm_to_list(input_file)
         list_without_comments()
-        print(list_of_vm_lines)
         vm_to_asm()
-      #  writing_to_a_file(os.path.splitext(input_file)[FIRST_PLACE] + HACK_SUFFIX)
+        writing_to_a_file(os.path.splitext(input_file)[FIRST_PLACE] +ASM_SUFFIX)
 
 def __main__():
     input_file = sys.argv[SEC_PLACE]
